@@ -1,0 +1,242 @@
+{
+  "name": "Automated Sales Stakeholder Reporting",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"overall_profit_margin\" : {{ ($json.sum_Profit/$json.sum_Sales)*100 }}\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        912,
+        -192
+      ],
+      "id": "4b5e0993-d388-4888-8cff-4e113cb0714f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "formTitle": "Upload sales dataset",
+        "formDescription": "Upload a CSV file for automated sales analysis.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload CSV dataset",
+              "fieldType": "file",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -160,
+        -192
+      ],
+      "id": "984c1c4a-2ee9-4e37-84ae-733703da3150",
+      "name": "On form submission"
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "Upload_CSV_dataset",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        -192
+      ],
+      "id": "c58c4bc9-d39d-4b90-8b3b-5c4be395240d",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"Sales\" :{{Number($json.Sales)}},\n  \"Profit\" :{{ Number($json.Profit)}},\n  \"Units\":{{ Number($json.Units) }}\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        256,
+        -192
+      ],
+      "id": "662a415c-6b8f-4c4b-ae78-3876cdb94d4c",
+      "name": "Convert Data Types"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"Profit_Margin\": {{($json.Profit/$json.Sales)*100}} \n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        480,
+        -192
+      ],
+      "id": "e5a15a69-57cf-4d09-8001-20b68ee37cae",
+      "name": "Calculate Profit Margin"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "sum",
+              "field": "Sales"
+            },
+            {
+              "aggregation": "sum",
+              "field": "Profit"
+            },
+            {
+              "aggregation": "sum",
+              "field": "Units"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        704,
+        -192
+      ],
+      "id": "f3d21f21-fd72-4929-bcd8-3e8068662bb4",
+      "name": "Summarize KPIs"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"report\": \"Sales Performance Update\\n\\nTotal Sales: {{$json.sum_Sales}}\\nTotal Profit: {{$json.sum_Profit}}\\nTotal Units Sold: {{$json.sum_Units}}\\nOverall Profit Margin: {{$json.overall_profit_margin.toFixed(2)}}%\\n\\nThis report was automatically generated from the uploaded sales dataset.\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1136,
+        -192
+      ],
+      "id": "bf2779ca-5112-4dff-9cbc-b5b90955a1b3",
+      "name": "Format Stakeholder Report"
+    },
+    {
+      "parameters": {
+        "sendTo": "stakeholder@example.com",
+        "subject": "Sales performance update",
+        "emailType": "text",
+        "message": "={{$json.report}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        -192
+      ],
+      "id": "57be1816-6b3c-473e-a1b2-4244d68ae91c",
+      "name": "Send a message"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Format Stakeholder Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Convert Data Types",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert Data Types": {
+      "main": [
+        [
+          {
+            "node": "Calculate Profit Margin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Profit Margin": {
+      "main": [
+        [
+          {
+            "node": "Summarize KPIs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize KPIs": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Stakeholder Report": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
